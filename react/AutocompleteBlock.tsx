@@ -68,6 +68,7 @@ const AutocompleteBlock: StorefrontFunctionComponent<any &
   const { promptOnCustomEvent } = settings
 
   const { setOrderForm }: OrderFormContext = OrderForm.useOrderForm()
+  const orderForm = OrderForm.useOrderForm()
 
   const translateMessage = (message: MessageDescriptor) => {
     return intl.formatMessage(message)
@@ -114,9 +115,17 @@ const AutocompleteBlock: StorefrontFunctionComponent<any &
 
   const { selectedItem, quantitySelected, unitMultiplier } = state
   const callAddToCart = async (items: any) => {
+    let currentItemsInCart = orderForm.orderForm.items
     const mutationResult = await addToCart({
       variables: {
         items: items.map((item: any) => {
+          let existsInCurrentOrder = currentItemsInCart.filter(
+            el => el.id === item.id.toString()
+          )
+          if (existsInCurrentOrder.length > 0) {
+            item['quantity'] =
+              item['quantity'] + existsInCurrentOrder[0]['quantity']
+          }
           return {
             ...item,
           }
@@ -195,7 +204,7 @@ const AutocompleteBlock: StorefrontFunctionComponent<any &
           !!product && product.length
             ? { ...product[0], value: selectedSku, seller, data }
             : null,
-        unitMultiplier: multiplier
+        unitMultiplier: multiplier,
       })
     }
     return true
@@ -214,11 +223,13 @@ const AutocompleteBlock: StorefrontFunctionComponent<any &
       seller,
       value,
     }
-    const matchedItem = selectedItem.data.product.items.find(item => item.itemId === value)
+    const matchedItem = selectedItem.data.product.items.find(
+      item => item.itemId === value
+    )
     setState({
       ...state,
       selectedItem: newSelected,
-      unitMultiplier: matchedItem.unitMultiplier
+      unitMultiplier: matchedItem.unitMultiplier,
     })
   }
 
@@ -231,7 +242,10 @@ const AutocompleteBlock: StorefrontFunctionComponent<any &
       const items = [
         {
           id: parseInt(selectedItem.value, 10),
-          quantity: calculateDivisible(parseFloat(quantitySelected), unitMultiplier),
+          quantity: calculateDivisible(
+            parseFloat(quantitySelected),
+            unitMultiplier
+          ),
           seller: selectedItem.seller,
         },
       ]
@@ -240,7 +254,6 @@ const AutocompleteBlock: StorefrontFunctionComponent<any &
       toastMessage('selectSku')
     }
   }
-
 
   const calculateDivisible = (quantity: number, multiplier: number) => {
     if (multiplier) {
@@ -347,7 +360,9 @@ const AutocompleteBlock: StorefrontFunctionComponent<any &
                       )}
                   </div>
                   {!!selectedItem && unitMultiplier && (
-                    <div className={`flex flex-column w-90 fl ${handles.productLabel}`}>
+                    <div
+                      className={`flex flex-column w-90 fl ${handles.productLabel}`}
+                    >
                       <span className="mr4">
                         <Tag type="warning" variation="low">
                           Unit Multiplier of {unitMultiplier}
@@ -372,7 +387,10 @@ const AutocompleteBlock: StorefrontFunctionComponent<any &
                         })
                       }}
                       onBlur={() => {
-                        const roundedValue = roundToNearestMultiple(quantitySelected, unitMultiplier)
+                        const roundedValue = roundToNearestMultiple(
+                          quantitySelected,
+                          unitMultiplier
+                        )
                         setState({
                           ...state,
                           quantitySelected: roundedValue,
