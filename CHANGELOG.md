@@ -7,6 +7,79 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.7.0] - 2022-02-10
+
+### Fixed
+
+- Fixed a bug where changing seller would not update specific status for that seller
+- Fixed a bug where the copy/paste and upload blocks would not show updated results
+
+## [3.6.2] - 2022-02-09
+
+### Added
+
+- Making the message "Unit Multiplier Of" in autocomplete block as an translatable message.
+
+## [3.6.1] - 2022-02-09
+
+### Fixed
+
+- Changing the validate button in TextArea and Upload blocks to only be shown if the user has written something or sent a file, respectively
+
+## [3.6.0] - 2022-02-09
+
+### Added
+
+- Arabic translation
+
+## [3.5.4] - 2022-02-09
+
+### Fixed
+
+- Adding a minimum quantity to one by one quantity input
+
+## [3.5.3] - 2022-02-09
+
+### Fixed
+
+- Fixing the issue that when adding items in the cart, it doesn't go back to the list page in text area and upload blocks
+
+## [3.5.2] - 2022-02-09
+
+### Added
+
+- Adding the proper Korean translations to each message in messages folder. (This was translated by an korean customer)
+
+## [3.5.1] - 2022-01-21
+
+### Fixed
+
+- Fixed typo
+
+## [3.5.0] - 2022-01-14
+
+### Added
+
+- Ability to run SonarCloud external PR after checking the code by adding a label to it
+
+### Changed
+
+- Sellers API
+
+### Updated
+
+- Code linting
+
+## [3.4.2] - 2022-01-11
+
+### Fixed
+
+- Restricting the Quick Order Upload to accept only .xls and .xlsx files
+
+## [3.4.1] - 2022-01-07
+
+## [3.4.0] - 2021-12-29
+
 ## [3.3.2] - 2021-12-21
 
 ### Fixed

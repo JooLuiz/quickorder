@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable vtex/prefer-early-return */
-import React, { useState, useEffect } from 'react'
+import React, { useState, FunctionComponent, useEffect } from 'react'
 import {
   Table,
   Input,
@@ -130,7 +130,7 @@ const messages = defineMessages({
 
 let orderFormId = ''
 
-const ReviewBlock: StorefrontFunctionComponent<WrappedComponentProps & any> = ({
+const ReviewBlock: FunctionComponent<WrappedComponentProps & any> = ({
   onReviewItems,
   reviewedItems,
   onRefidLoading,
@@ -225,9 +225,12 @@ const ReviewBlock: StorefrontFunctionComponent<WrappedComponentProps & any> = ({
             })
           : []
 
-      let mappedRefId = {}
-      if (!!refidData && !!refidData.skuFromRefIds.items) {
-        mappedRefId = refidData.skuFromRefIds.items.reduce((acc: any, item: any)=> (acc[item.refid]=item,acc),{});
+      const mappedRefId = {}
+
+      if (refidData?.skuFromRefIds?.items) {
+        refidData.skuFromRefIds.items.forEach((item: any) => {
+          mappedRefId[item.refid] = item
+        })
       }
 
       const errorMsg = (item: any) => {
@@ -254,14 +257,17 @@ const ReviewBlock: StorefrontFunctionComponent<WrappedComponentProps & any> = ({
       }
 
       const items = reviewed.map((item: any) => {
-        const sellers = item.sku ? mappedRefId[item.sku]?.sellers : '1'
         return {
           ...item,
           sellers: item.sku ? mappedRefId[item.sku]?.sellers : '1',
-          seller: sellers?.length ? sellers[0].id : '1',
+          seller: item.seller ? item.seller : '1',
           vtexSku: item.sku ? mappedRefId[item.sku]?.sku : '1',
-          unitMultiplier: item.sku ? mappedRefId[item.sku]?.unitMultiplier : '1',
-          totalQuantity: (item.sku ? mappedRefId[item.sku]?.unitMultiplier : '1') * item.quantity,
+          unitMultiplier: item.sku
+            ? mappedRefId[item.sku]?.unitMultiplier
+            : '1',
+          totalQuantity:
+            (item.sku ? mappedRefId[item.sku]?.unitMultiplier : '1') *
+            item.quantity,
           error: errorMsg(item),
         }
       })
@@ -287,20 +293,17 @@ const ReviewBlock: StorefrontFunctionComponent<WrappedComponentProps & any> = ({
     }
   }
 
-  const getRefIds = async (_refids: any, reviewed: any) => {
+  const getRefIds = async (
+    _refids: any,
+    reviewed: any,
+    refIdSellerMap: any
+  ) => {
     onRefidLoading(true)
-    let refids = {}
-
-    if (_refids.length) {
-      _refids.forEach(refid => {
-        refids[refid] = true
-      })
-      refids = Object.getOwnPropertyNames(refids)
-    }
+    const refids = _refids.length ? Array.from(new Set(_refids)) : []
 
     const query = {
       query: getRefIdTranslation,
-      variables: { refids, orderFormId },
+      variables: { refids, orderFormId, refIdSellerMap },
     }
 
     const { data } = await client.query(query)
@@ -310,15 +313,18 @@ const ReviewBlock: StorefrontFunctionComponent<WrappedComponentProps & any> = ({
   }
 
   const convertRefIds = (items: any) => {
+    const refIdSellerMap = {}
     const refids = items
       .filter((item: any) => {
         return item.error === null
       })
       .map((item: any) => {
+        refIdSellerMap[item.sku] = '1'
+
         return item.sku
       })
 
-    getRefIds(refids, items)
+    getRefIds(refids, items, refIdSellerMap)
   }
 
   const checkValidatedItems = () => {
@@ -372,6 +378,7 @@ const ReviewBlock: StorefrontFunctionComponent<WrappedComponentProps & any> = ({
   }
 
   const updateLineSeller = (index: number, seller: string) => {
+    const refIdSellerMap = {}
     const items = reviewItems.map((item: any) => {
       return item.index === index
         ? {
@@ -381,10 +388,13 @@ const ReviewBlock: StorefrontFunctionComponent<WrappedComponentProps & any> = ({
         : item
     })
 
-    setReviewState({
-      ...state,
-      reviewItems: items,
+    const refids = items.map((item: any) => {
+      refIdSellerMap[item.sku] = item.seller
+
+      return item.sku
     })
+
+    getRefIds(refids, items, refIdSellerMap)
   }
 
   const onBlurField = (line: number) => {
@@ -441,28 +451,28 @@ const ReviewBlock: StorefrontFunctionComponent<WrappedComponentProps & any> = ({
       sku: {
         type: 'string',
         title: intl.formatMessage({ id: 'store/quickorder.review.label.sku' }),
-        width: 125
+        width: 125,
       },
       quantity: {
         type: 'string',
         title: intl.formatMessage({
           id: 'store/quickorder.review.label.quantity',
         }),
-        width: 75
+        width: 75,
       },
       unitMultiplier: {
         type: 'float',
         title: intl.formatMessage({
           id: 'store/quickorder.review.label.multiplier',
         }),
-        width: 100
+        width: 100,
       },
       totalQuantity: {
         type: 'float',
         title: intl.formatMessage({
           id: 'store/quickorder.review.label.totalQuantity',
         }),
-        width: 100
+        width: 100,
       },
       seller: {
         type: 'string',
@@ -481,17 +491,15 @@ const ReviewBlock: StorefrontFunctionComponent<WrappedComponentProps & any> = ({
                     }
                   })}
                   value={rowData.seller}
-                  onChange={(_: any, v: any) =>
+                  onChange={(_: any, v: any) => {
                     updateLineSeller(rowData.index, v)
-                  }
+                  }}
                 />
               </div>
             )
           }
 
-          return rowData.sellers && rowData.sellers.length
-            ? rowData.sellers[0].name
-            : ''
+          return rowData?.sellers?.length ? rowData.sellers[0].name : ''
         },
       },
       error: {

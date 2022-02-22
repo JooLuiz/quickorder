@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useContext } from 'react'
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
+import React, { useState, useContext, FunctionComponent } from 'react'
 import {
   FormattedMessage,
   defineMessages,
@@ -37,7 +38,12 @@ const messages = defineMessages({
   },
 })
 
-const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
+interface ItemType {
+  id: string
+  quantity: number
+}
+
+const TextAreaBlock: FunctionComponent<TextAreaBlockInterface &
   WrappedComponentProps> = ({
   intl,
   value,
@@ -66,6 +72,10 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
   const { promptOnCustomEvent } = settings
 
   const { setOrderForm }: OrderFormContext = OrderForm.useOrderForm()
+<<<<<<< HEAD
+=======
+  const orderForm = OrderForm.useOrderForm()
+>>>>>>> e68473fbe319fdd566668e73b726e47ca94fb0ae
   const { showToast } = useContext(ToastContext)
 
   const translateMessage = (message: MessageDescriptor) => {
@@ -78,6 +88,7 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
 
     return translateMessage(messages.success)
   }
+
   const toastMessage = ({
     success,
     isNewItem,
@@ -93,13 +104,36 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
           href: '/checkout/#/cart',
         }
       : undefined
+
     showToast({ message, action })
   }
 
+  const backList = () => {
+    setState({
+      ...state,
+      reviewState: false,
+    })
+  }
+
   const callAddToCart = async (items: any) => {
+<<<<<<< HEAD
     const mutationResult = await addToCart({
       variables: {
         items: items.map((item: any) => {
+=======
+    const currentItemsInCart = orderForm.orderForm.items
+    const mutationResult = await addToCart({
+      variables: {
+        items: items.map((item: ItemType) => {
+          const [existsInCurrentOrder] = currentItemsInCart.filter(
+            el => el.id === item.id.toString()
+          )
+
+          if (existsInCurrentOrder) {
+            item.quantity += parseInt(existsInCurrentOrder.quantity, 10)
+          }
+
+>>>>>>> e68473fbe319fdd566668e73b726e47ca94fb0ae
           return {
             ...item,
           }
@@ -110,6 +144,7 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
     if (mutationError) {
       console.error(mutationError)
       toastMessage({ success: false, isNewItem: false })
+
       return
     }
 
@@ -122,8 +157,10 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
         quantity: item.quantity,
       }
     }
+
     // Send event to pixel-manager
     const pixelEventItems = items.map(adjustSkuItemForPixelEvent)
+
     push({
       event: 'addToCart',
       items: pixelEventItems,
@@ -148,6 +185,8 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
       showInstallPrompt()
     }
 
+    backList()
+
     return showInstallPrompt
   }
 
@@ -157,6 +196,7 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
         items.filter((item: any) => {
           return !item.vtexSku
         }).length === 0
+
       setState({
         ...state,
         reviewItems: items,
@@ -165,6 +205,7 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
         textAreaValue: GetText(items),
       })
     }
+
     return true
   }
 
@@ -173,6 +214,7 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
     const error = !!items.filter((item: any) => {
       return item.error !== null
     }).length
+
     setState({
       ...state,
       reviewItems: items,
@@ -199,6 +241,7 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
     'textContainerTitle',
     'textContainerDescription',
   ] as const
+
   const handles = useCssHandles(CSS_HANDLES)
 
   const addToCartCopyNPaste = () => {
@@ -212,21 +255,37 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
         }
       })
 
+<<<<<<< HEAD
     if (items.length === 0) {
       toastMessage({ success: false, isNewItem: false })
       return
     }
 
     callAddToCart(items)
+=======
+    const merge = internalItems => {
+      return internalItems.reduce((acc, val) => {
+        const { id, quantity }: ItemType = val
+        const ind = acc.findIndex(el => el.id === id)
+
+        if (ind !== -1) {
+          acc[ind].quantity += quantity
+        } else {
+          acc.push(val)
+        }
+
+        return acc
+      }, [])
+    }
+
+    const mergedItems = merge(items)
+
+    callAddToCart(mergedItems)
+>>>>>>> e68473fbe319fdd566668e73b726e47ca94fb0ae
   }
+
   const onRefidLoading = (data: boolean) => {
     setRefIdLoading(data)
-  }
-  const backList = () => {
-    setState({
-      ...state,
-      reviewState: false,
-    })
   }
 
   return (
@@ -261,15 +320,17 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
                 }
               />
               <div className={`mt2 flex justify-end ${handles.buttonValidate}`}>
-                <Button
-                  variation="secondary"
-                  size="regular"
-                  onClick={() => {
-                    parseText()
-                  }}
-                >
-                  <FormattedMessage id="store/quickorder.validate" />
-                </Button>
+                {textAreaValue && (
+                  <Button
+                    variation="secondary"
+                    size="regular"
+                    onClick={() => {
+                      parseText()
+                    }}
+                  >
+                    <FormattedMessage id="store/quickorder.validate" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -317,7 +378,7 @@ const TextAreaBlock: StorefrontFunctionComponent<TextAreaBlockInterface &
 
 interface MessageDescriptor {
   id: string
-  description?: string | object
+  description?: string | any
   defaultMessage?: string
 }
 

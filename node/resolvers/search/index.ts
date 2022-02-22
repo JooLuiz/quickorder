@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { UserInputError } from '@vtex/api'
 
 import { resolvers as refidsResolvers } from './refids'
@@ -9,9 +11,9 @@ export const fieldResolvers = {
 export const queries = {
   skuFromRefIds: async (
     _: any,
-    args: { refids: string; orderFormId: string },
+    args: { refids: string; orderFormId: string; refIdSellerMap: any },
     ctx: Context
-  ) => {
+  ): Promise<any> => {
     const {
       clients: { search },
     } = ctx
@@ -23,6 +25,7 @@ export const queries = {
     const items = await search.skuFromRefIds({
       refids: args.refids,
       orderFormId: args.orderFormId,
+      refIdSellerMap: args.refIdSellerMap,
     })
 
     return {
@@ -30,7 +33,7 @@ export const queries = {
       items,
     }
   },
-  sellers: async (_: any, __: {}, ctx: Context) => {
+  sellers: async (_: any, __: any, ctx: Context): Promise<any> => {
     const {
       clients: { search },
     } = ctx
